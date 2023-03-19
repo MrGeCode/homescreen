@@ -1,4 +1,8 @@
+api url `GET https://api.digitransit.fi/timetables/v1/hsl`
+
+
 https://digitransit.fi/en/developers/apis/1-routing-api/stops/
+
 
 ```
 {

@@ -1,0 +1,163 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Routing v1",
+        "description": "Routing API provides a way to plan itineraries and query public transportation related information such as stops and timetables using GraphQL.\n\nMore information: https://digitransit.fi/en/developers/apis/1-routing-api/",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://api.digitransit.fi/routing/v1"
+        }
+    ],
+    "paths": {
+        "/routers/finland/index/graphql/batch": {
+            "post": {
+                "summary": "Routing v1 finland post graphql batch",
+                "operationId": "finland-graphql-batch",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/finland/index/graphql": {
+            "post": {
+                "summary": "Routing v1 finland post graphql",
+                "operationId": "finland-graphql",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/finland/*": {
+            "options": {
+                "summary": "Routing v1 finland options wildcard",
+                "operationId": "finland-star-opt",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            },
+            "get": {
+                "summary": "Routing v1 finland get wildcard",
+                "operationId": "finland-star-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/hsl/index/graphql": {
+            "post": {
+                "summary": "Routing v1 hsl post graphql",
+                "operationId": "hsl-graphql-post",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/hsl/index/graphql/batch": {
+            "post": {
+                "summary": "Routing v1 hsl post graphql batch",
+                "operationId": "hsl-graphql-batch-post",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/hsl/*": {
+            "options": {
+                "summary": "Routing v1 hsl options wildcard",
+                "operationId": "hsl-star-opt",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            },
+            "get": {
+                "summary": "Routing v1 hsl get wildcard",
+                "operationId": "hsl-star-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/waltti/index/graphql": {
+            "post": {
+                "summary": "Routing v1 waltti post graphql",
+                "operationId": "waltti-graphql-post",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/waltti/index/graphql/batch": {
+            "post": {
+                "summary": "Routing v1 waltti post graphql batch",
+                "operationId": "waltti-graphql-batch-post",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/routers/waltti/*": {
+            "options": {
+                "summary": "Routing v1 waltti options wildcard",
+                "operationId": "waltti-star-opt",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            },
+            "get": {
+                "summary": "Routing v1 waltti get wildcard",
+                "operationId": "waltti-star-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}

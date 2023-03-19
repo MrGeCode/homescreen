@@ -1,0 +1,48 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Timetables v1",
+        "description": "HSL stop and route timetables",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://api.digitransit.fi/timetables/v1"
+        }
+    ],
+    "paths": {
+        "/hsl/*": {
+            "get": {
+                "summary": "Timetables v1 hsl get wildcard",
+                "operationId": "hsl-star-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}

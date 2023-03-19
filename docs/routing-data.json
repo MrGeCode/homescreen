@@ -1,0 +1,103 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Routing data v2",
+        "description": "Routing Data provides three OpenTripPlanner routing data: Helsinki region, the Waltti regions, and whole Finland.\n",
+        "version": "v2"
+    },
+    "servers": [
+        {
+            "url": "https://api.digitransit.fi/routing-data/v2"
+        }
+    ],
+    "paths": {
+        "/finland/*": {
+            "get": {
+                "summary": "Routing data v2 finland wildcard",
+                "operationId": "finland-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/finland": {
+            "get": {
+                "summary": "Routing data v2 finland root",
+                "operationId": "finland-root-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/hsl/*": {
+            "get": {
+                "summary": "Routing data v2 hsl wildcard",
+                "operationId": "hsl-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/hsl": {
+            "get": {
+                "summary": "Routing data v2 hsl root",
+                "operationId": "hsl-root-get",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/waltti/*": {
+            "get": {
+                "summary": "Routing data v2 waltti wildcard",
+                "operationId": "waltti",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/waltti": {
+            "get": {
+                "summary": "Routing data v2 waltti root",
+                "operationId": "waltti-root",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "digitransit-subscription-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}

@@ -19,7 +19,7 @@ query = '''
       headsign
     }
  }
-  
+
 
 stop(id: "HSL:1293133") {
     gtfsId

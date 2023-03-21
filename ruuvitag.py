@@ -3,7 +3,8 @@ import os
 from datetime import datetime, timedelta
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
-logging.basicConfig(filename='data.log', level=logging.INFO)
+logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data.log', level=logging.INFO)
+
 
 data_interval = timedelta(minutes=1)
 last_saved = {}
@@ -13,7 +14,7 @@ def delete_old_logs():
     now = datetime.now()
     start_time = now - timedelta(days=365)
     data_to_keep = {}
-    with open('data.log', 'r') as f:
+    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'r') as f:
         lines = f.readlines()
     for line in lines:
         parts = line.strip().split(' - ')
@@ -29,7 +30,7 @@ def delete_old_logs():
         elif log_time.minute % 15 == 0:
             if mac not in data_to_keep or log_time > data_to_keep[mac]:
                 data_to_keep[mac] = log_time
-    with open('data.log', 'w') as f:
+    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'w') as f:
         for line in lines:
             parts = line.strip().split(' - ')
             if len(parts) != 3:

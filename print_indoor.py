@@ -17,10 +17,10 @@ log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
 with open(log_file_path, "r") as log_file:
     for line in log_file.readlines():
         # Check if the line starts with INFO:root and contains the desired MAC address
-        if line.startswith("INFO:root") and "MAC F3:DB:14:E5:BD:FB" in line:
+        if line.startswith("INFO:root") and "MAC E1:EE:8A:A0:01:C5" in line:
 
             # Extract the timestamp and data dictionary using regex
-            timestamp_str, data_str = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}) - MAC F3:DB:14:E5:BD:FB - Data (.+)$", line).groups()
+            timestamp_str, data_str = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}) - MAC E1:EE:8A:A0:01:C5 - Data (.+)$", line).groups()
 
             # Convert the timestamp to a datetime object
             timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
@@ -42,6 +42,6 @@ with open(log_file_path, "r") as log_file:
                 if lowest_temperature is None or temperature < lowest_temperature:
                     lowest_temperature = temperature
 
-print(f"Ulkolämpötila: {latest_temperature}°C")
+print(f"Sisälämpötila: {latest_temperature}°C")
 print(f"'\u2191': {highest_temperature}°C")
 print(f"'\u2193': {lowest_temperature}°C")

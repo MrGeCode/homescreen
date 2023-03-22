@@ -1,35 +1,47 @@
-import datetime
-import ast
+import re
+from datetime import datetime, time, timedelta
 
-filename = '/home/nikopelkonen/workspace/homescreen/data.log'
+# Initialize variables
+latest_temperature = None
+highest_temperature = None
+lowest_temperature = None
+latest_timestamp = None
 
-with open(filename, 'r') as file:
-    lines = file.readlines()
-    print(f"Number of lines read from file: {len(lines)}")
-    
-    latest_temperatures = {}
-    for line in lines:
-        if line.startswith('INFO:root:'):
-            parts = line.split()
-            mac_address = parts[3]
-            print(f"MAC address found in line: {mac_address}")
-            if mac_address == 'F3:DB:14:E5:BD:FB':
-                timestamp = datetime.datetime.strptime(parts[1] + ' ' + parts[2], '%Y-%m-%d %H:%M:%S.%f')
-                data = ast.literal_eval(' '.join(parts[5:]))
-                print(f"Data dictionary for line: {data}")
-                if 'temperature' in data:
-                    temperature = data['temperature']
-                    latest_temperatures[timestamp] = temperature
-                    print(f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} - Temperature: {temperature}       C")
+today_midnight = datetime.combine(datetime.today(), time(0, 0))
+tomorrow_midnight = today_midnight + timedelta(days=1)
 
-    if latest_temperatures:
-        latest_time = max(latest_temperatures.keys())
-        lowest_temp = min(latest_temperatures.values())
-        highest_temp = max(latest_temperatures.values())
-        current_temp = latest_temperatures[latest_time]
+# Provide the correct file path
+log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
 
-        print(f"\nCurrent temperature: {current_temp}       C")
-        print(f"Highest temperature since midnight: {highest_temp}       C")
-        print(f"Lowest temperature since midnight: {lowest_temp}       C")
-    else:
-        print("No temperature readings found for MAC address F3:DB:14:E5:BD:FB")
+# Open the log file and read the lines
+with open(log_file_path, "r") as log_file:
+    for line in log_file.readlines():
+        # Check if the line starts with INFO:root and contains the desired MAC address
+        if line.startswith("INFO:root") and "MAC F3:DB:14:E5:BD:FB" in line:
+
+            # Extract the timestamp and data dictionary using regex
+            timestamp_str, data_str = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}) - MAC F3:DB:14:E5:BD:FB - Data (.+)$", line).groups()
+
+            # Convert the timestamp to a datetime object
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+
+            # Check if the timestamp is between today midnight and tomorrow midnight
+            if today_midnight <= timestamp < tomorrow_midnight:
+                # Parse the data dictionary
+                data = eval(data_str)
+                temperature = data["temperature"]
+
+                # Update the latest, highest, and lowest temperatures
+                if latest_timestamp is None or timestamp > latest_timestamp:
+                    latest_temperature = temperature
+                    latest_timestamp = timestamp
+
+                if highest_temperature is None or temperature > highest_temperature:
+                    highest_temperature = temperature
+
+                if lowest_temperature is None or temperature < lowest_temperature:
+                    lowest_temperature = temperature
+
+print(f"Latest temperature: {latest_temperature}")
+print(f"Highest temperature: {highest_temperature}")
+print(f"Lowest temperature: {lowest_temperature}")

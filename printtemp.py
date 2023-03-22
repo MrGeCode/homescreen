@@ -42,6 +42,6 @@ with open(log_file_path, "r") as log_file:
                 if lowest_temperature is None or temperature < lowest_temperature:
                     lowest_temperature = temperature
 
-print(f"Latest temperature: {latest_temperature}")
-print(f"Highest temperature: {highest_temperature}")
-print(f"Lowest temperature: {lowest_temperature}")
+print(f"Ulkolämpötila: {latest_temperature}")
+print(f"'\u2191': {highest_temperature}")
+print(f"'\u2193': {lowest_temperature}")

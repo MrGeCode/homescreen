@@ -1,7 +1,37 @@
 import logging
 import os
 from datetime import datetime, timedelta
+import shutil
+import glob
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
+
+
+log_file = '/home/nikopelkonen/workspace/homescreen/data.log'
+backup_dir = '/home/nikopelkonen/workspace/homescreen/backup/'
+
+backup_file = backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'
+if not os.path.exists(backup_file):
+    shutil.copy(log_file, backup_file)
+
+# Check if the log file is empty or smaller than a threshold size
+threshold_size = 1048576  # 1 MB
+if os.path.getsize(log_file) < threshold_size:
+    # Look for the latest backup file
+    backup_files = glob.glob(backup_dir + 'data_*.log')
+    latest_backup = max(backup_files, key=os.path.getctime)
+    # Check if the latest backup file is larger than the log file
+    if os.path.getsize(latest_backup) > os.path.getsize(log_file):
+        # Copy the latest backup file to the log file location
+        shutil.copy(latest_backup, log_file)
+
+max_backup_age = 3
+
+backup_files = glob.glob(backup_dir + 'data_*.log')
+for backup_file in backup_files:
+    backup_time = datetime.fromtimestamp(os.path.getctime(backup_file))
+    if (datetime.now() - backup_time).days > max_backup_age:
+        os.remove(backup_file)
+
 
 logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data.log', level=logging.INFO)
 

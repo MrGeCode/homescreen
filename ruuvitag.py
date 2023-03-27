@@ -32,6 +32,16 @@ for backup_file in backup_files:
     if (datetime.now() - backup_time).days > max_backup_age:
         os.remove(backup_file)
 
+if datetime.now().strftime('%H:%M') == '00:00':
+    backup_file = backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'
+    if not os.path.exists(backup_file):
+        shutil.copy(log_file, backup_file)
+
+backup_files = glob.glob(backup_dir + 'data_*.log')
+backup_files.sort(key=os.path.getctime, reverse=True)
+for backup_file in backup_files[3:]:
+    os.remove(backup_file)
+
 
 logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data.log', level=logging.INFO)
 

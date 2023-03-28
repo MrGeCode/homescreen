@@ -3,11 +3,10 @@ import json
 import time
 from datetime import datetime, timedelta, time as datetime_time
 
+print("Starting printtemptojson.py...")
+
 # Initialize variables
-latest_temperature = None
-highest_temperature = None
-lowest_temperature = None
-latest_timestamp = None
+sensors_data = []
 
 # Provide the correct file path
 log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
@@ -32,26 +31,27 @@ while True:
                     data = eval(data_str)
                     temperature = data["temperature"]
 
-                    if latest_timestamp is None or timestamp > latest_timestamp:
-                        latest_temperature = temperature
-                        latest_timestamp = timestamp
+                    sensor_data = next((sd for sd in sensors_data if sd["id"] == "ulkotila"), None)
+                    if not sensor_data:
+                        sensor_data = {"id": "ulkotila", "data": []}
+                        sensors_data.append(sensor_data)
 
-                    if highest_temperature is None or temperature > highest_temperature:
-                        highest_temperature = temperature
-
-                    if lowest_temperature is None or temperature < lowest_temperature:
-                        lowest_temperature = temperature
+                    sensor_data["data"].append({"timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"), "temperature": temperature})
 
     # Save the temperature data to a JSON file
-    temperature_data = {
-        "latest_temperature": latest_temperature,
-        "highest_temperature": highest_temperature,
-        "lowest_temperature": lowest_temperature
-    }
+    sensors_json_data = []
+    for sensor_data in sensors_data:
+        data = sensor_data["data"]
+        latest_temperature = data[-1]["temperature"]
+        highest_temperature = max([d["temperature"] for d in data])
+        lowest_temperature = min([d["temperature"] for d in data])
+        latest_timestamp = data[-1]["timestamp"]
+        sensors_json_data.append({"id": sensor_data["id"], "timestamp": latest_timestamp, "latest_temperature": latest_temperature, "highest_temperature": highest_temperature, "lowest_temperature": lowest_temperature})
+
+    sensors_json = {"sensors": sensors_json_data}
 
     with open(output_file_path, "w") as json_file:
-        json.dump(temperature_data, json_file)
+        json.dump(sensors_json, json_file)
 
     # Wait for a minute before updating the file again
     time.sleep(60)
-

@@ -3,8 +3,6 @@ import json
 import time
 from datetime import datetime, timedelta, time as datetime_time
 
-print("Starting printtemptojson.py...")
-
 # Provide the correct file path
 log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
 
@@ -21,19 +19,28 @@ while True:
     # Open the log file and read the lines
     with open(log_file_path, "r") as log_file:
         for line in log_file.readlines():
+            sensor_id = None
+            mac_address = None
+
             if line.startswith("INFO:root") and "MAC F3:DB:14:E5:BD:FB" in line:
+                sensor_id = "ulkotila"
+                mac_address = "MAC F3:DB:14:E5:BD:FB"
+            elif line.startswith("INFO:root") and "MAC E1:EE:8A:A0:01:C5" in line:
+                sensor_id = "sisatila"
+                mac_address = "MAC E1:EE:8A:A0:01:C5"
 
-                timestamp_str, data_str = re.search(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}) - MAC F3:DB:14:E5:BD:FB - Data (.+)$", line).groups()
-
+            if sensor_id and mac_address:
+                
+                timestamp_str, data_str = re.search(rf"(\d{{4}}-\d{{2}}-\d{{2}} \d{{2}}:\d{{2}}:\d{{2}}\.\d{{6}}) - {mac_address} - Data (.+)$", line).groups()
                 timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
 
                 if today_midnight <= timestamp < tomorrow_midnight:
                     data = eval(data_str)
                     temperature = data["temperature"]
 
-                    sensor_data = next((sd for sd in sensors_data if sd["id"] == "ulkotila"), None)
+                    sensor_data = next((sd for sd in sensors_data if sd["id"] == sensor_id), None)
                     if not sensor_data:
-                        sensor_data = {"id": "ulkotila", "data": []}
+                        sensor_data = {"id": sensor_id, "data": []}
                         sensors_data.append(sensor_data)
 
                     sensor_data["data"].append({"timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"), "temperature": temperature})
@@ -48,10 +55,9 @@ while True:
         latest_timestamp = data[-1]["timestamp"]
         sensors_json_data.append({"id": sensor_data["id"], "timestamp": latest_timestamp, "latest_temperature": latest_temperature, "highest_temperature": highest_temperature, "lowest_temperature": lowest_temperature})
 
-    sensors_json = {"sensors": sensors_json_data}
+    # Write the JSON data to the output file
+    with open(output_file_path, "w") as output_file:
+        json.dump(sensors_json_data, output_file)
 
-    with open(output_file_path, "w") as json_file:
-        json.dump(sensors_json, json_file)
-
-    # Wait for a minute before updating the file again
+    # Sleep for a specified interval (e.g., 60 seconds) before repeating the process
     time.sleep(60)

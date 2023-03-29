@@ -55,9 +55,9 @@ while True:
         latest_timestamp = data[-1]["timestamp"]
         sensors_json_data.append({"id": sensor_data["id"], "timestamp": latest_timestamp, "latest_temperature": latest_temperature, "highest_temperature": highest_temperature, "lowest_temperature": lowest_temperature})
 
-    # Write the JSON data to the output file
+    # Write the JSON data to the output file with indentation
     with open(output_file_path, "w") as output_file:
-        json.dump(sensors_json_data, output_file)
+        json.dump(sensors_json_data, output_file, indent=4)
 
     # Sleep for a specified interval (e.g., 60 seconds) before repeating the process
     time.sleep(60)

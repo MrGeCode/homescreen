@@ -5,9 +5,6 @@ from datetime import datetime, timedelta, time as datetime_time
 
 print("Starting printtemptojson.py...")
 
-# Initialize variables
-sensors_data = []
-
 # Provide the correct file path
 log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
 
@@ -15,6 +12,9 @@ log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
 output_file_path = "/var/www/html/temperature.json"
 
 while True:
+    # Initialize variables
+    sensors_data = []
+
     today_midnight = datetime.combine(datetime.today(), datetime_time(0, 0))
     tomorrow_midnight = today_midnight + timedelta(days=1)
 

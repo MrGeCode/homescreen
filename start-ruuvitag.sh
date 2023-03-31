@@ -4,8 +4,4 @@
 source /home/nikopelkonen/workspace/homescreen/bienv/bin/activate
 
 # run the ruuvitag.py script
-python /home/nikopelkonen/workspace/homescreen/ruuvitag.py &
-
-sleep 5
-
-python /home/nikopelkonen/workspace/homescreen/temperature/printtemptojson.py
+python /home/nikopelkonen/workspace/homescreen/ruuvitag.py

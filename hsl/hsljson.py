@@ -68,5 +68,5 @@ while True:
     with open('/var/www/html/hsl.json', 'w') as f:
         json.dump(combined_output, f, indent=4)
 
-    # Wait for 60 seconds before updating again
-    time.sleep(60)
+    # Wait for 15 seconds before updating again
+    time.sleep(15)

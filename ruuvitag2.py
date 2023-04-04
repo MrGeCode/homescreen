@@ -6,7 +6,7 @@ import glob
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
 
-log_file = '/home/nikopelkonen/workspace/homescreen/data.log'
+log_file = '/home/nikopelkonen/workspace/homescreen/data1.log'
 backup_dir = '/home/nikopelkonen/workspace/homescreen/backup/'
 
 if not os.path.exists(backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'):
@@ -47,7 +47,7 @@ for backup_file in backup_files[3:]:
     os.remove(backup_file)
 
 
-logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data.log', level=logging.INFO)
+logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data1.log', level=logging.INFO)
 
 
 data_interval = timedelta(minutes=1)
@@ -58,7 +58,7 @@ def delete_old_logs():
     now = datetime.now()
     start_time = now - timedelta(days=365)
     data_to_keep = {}
-    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'r') as f:
+    with open('/home/nikopelkonen/workspace/homescreen/data1.log', 'r') as f:
         lines = f.readlines()
     for line in lines:
         parts = line.strip().split(' - ')
@@ -74,7 +74,7 @@ def delete_old_logs():
         elif log_time.minute % 15 == 0:
             if mac not in data_to_keep or log_time > data_to_keep[mac]:
                 data_to_keep[mac] = log_time
-    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'w') as f:
+    with open('/home/nikopelkonen/workspace/homescreen/data1.log', 'w') as f:
         for line in lines:
             parts = line.strip().split(' - ')
             if len(parts) != 3:
@@ -95,13 +95,26 @@ def handle_data(found_data):
     now = datetime.now()
 
     # Save data point every minute
-    if mac not in last_saved or now - last_saved[mac] >= data_interval:
-        logging.info(f"{now} - MAC {mac} - Data {data}")
-        last_saved[mac] = now
+    if mac not in last_saved:
+        last_saved[mac] = {'data': [], 'last_save_time': None}
+
+    last_saved_data = last_saved[mac]['data']
+    last_save_time = last_saved[mac]['last_save_time']
+    last_saved_data.append({'time': now, 'data': data})
+
+    if last_save_time is None or now - last_save_time >= data_interval:
+        # Save data to log
+        for saved_data in last_saved_data:
+            logging.info(f"{saved_data['time']} - MAC {mac} - Data {saved_data['data']}")
+        last_saved[mac]['data'] = []
+        last_saved[mac]['last_save_time'] = now
 
     # Delete old log data and keep one data point every 15 minutes after one year
     if now.date() != datetime(2024, 3, 21).date():
         delete_old_logs()
+last_saved = {}
+data_interval = timedelta(minutes=1)
 
 if __name__ == "__main__":
     RuuviTagSensor.get_data(handle_data)
+

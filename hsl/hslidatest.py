@@ -3,11 +3,12 @@ import json
 import time
 import os
 from dotenv import load_dotenv
-import os
 
+# Load environment variables from the .env file
 load_dotenv()
-api_key = os.getenv('API_KEY')
 
+# Get the API key from the environment variable
+api_key = os.getenv('API_KEY')
 
 # Define the GraphQL query as a string
 query = '''
@@ -59,7 +60,7 @@ url = 'https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql'
 api_key = os.environ.get('API_KEY')
 
 # Send the GraphQL query to the server with the API key in the headers
-response = requests.post(url, json={'query': query}, headers={'Authorization': 'Bearer ' + api_key})
+response = requests.post(url, json={'query': query}, headers={'digitransit-subscription-key': api_key})
 
 # Extract the stop data from the response
 stop_data = response.json()['data']['stop']

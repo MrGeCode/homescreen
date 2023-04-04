@@ -9,6 +9,10 @@ from ruuvitag_sensor.ruuvi import RuuviTagSensor
 log_file = '/home/nikopelkonen/workspace/homescreen/data.log'
 backup_dir = '/home/nikopelkonen/workspace/homescreen/backup/'
 
+if not os.path.exists(backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'):
+    shutil.copy(log_file, backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log')
+
+
 backup_file = backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'
 if not os.path.exists(backup_file):
     shutil.copy(log_file, backup_file)

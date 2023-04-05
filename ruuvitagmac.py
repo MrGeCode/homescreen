@@ -5,5 +5,3 @@ def handle_data(found_data):
     print(f"MAC address: {mac}")
 
 RuuviTagSensor.get_data(handle_data)
-
-test

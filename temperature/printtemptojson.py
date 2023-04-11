@@ -52,7 +52,7 @@ if __name__ == '__main__':
         'F3:DB:14:E5:BD:FB': 'ulkotila'
     }
 
-    output_file_path = "/var/www/html/temperature2.json"
+    output_file_path = "/var/www/html/temperature.json"
 
     while True:
         temperature_data = generate_temperature_json(mac_address_to_id)

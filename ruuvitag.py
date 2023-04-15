@@ -1,107 +1,55 @@
-import logging
-import os
+import redis
+import json
 from datetime import datetime, timedelta
-import shutil
-import glob
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
+# Redis configuration
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
 
-log_file = '/home/nikopelkonen/workspace/homescreen/data.log'
-backup_dir = '/home/nikopelkonen/workspace/homescreen/backup/'
+# Create Redis client
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
-if not os.path.exists(backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'):
-    shutil.copy(log_file, backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log')
+# Interval to save data to Redis (in seconds)
+SAVE_INTERVAL = 60
 
+# Last time data was saved to Redis
+last_save_time = datetime.now()
 
-backup_file = backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'
-if not os.path.exists(backup_file):
-    shutil.copy(log_file, backup_file)
+def save_data_to_redis(mac_address, data):
+    # Add timestamp to the data
+    redis_time = redis_client.time()  # get current server time
+    timestamp = datetime.fromtimestamp(redis_time[0] + redis_time[1] / 1000000).strftime("%Y-%m-%d %H:%M:%S.%f")
+    data['timestamp'] = timestamp
 
-# Check if the log file is empty or smaller than a threshold size
-threshold_size = 1048576  # 1 MB
-if os.path.getsize(log_file) < threshold_size:
-    # Look for the latest backup file
-    backup_files = glob.glob(backup_dir + 'data_*.log')
-    latest_backup = max(backup_files, key=os.path.getctime)
-    # Check if the latest backup file is larger than the log file
-    if os.path.getsize(latest_backup) > os.path.getsize(log_file):
-        # Copy the latest backup file to the log file location
-        shutil.copy(latest_backup, log_file)
+    # Convert data to JSON string
+    data_json = json.dumps(data)
 
-max_backup_age = 3
-
-backup_files = glob.glob(backup_dir + 'data_*.log')
-for backup_file in backup_files:
-    backup_time = datetime.fromtimestamp(os.path.getctime(backup_file))
-    if (datetime.now() - backup_time).days > max_backup_age:
-        os.remove(backup_file)
-
-if datetime.now().strftime('%H:%M') == '00:00':
-    backup_file = backup_dir + 'data_' + datetime.now().strftime('%Y-%m-%d') + '.log'
-    if not os.path.exists(backup_file):
-        shutil.copy(log_file, backup_file)
-
-backup_files = glob.glob(backup_dir + 'data_*.log')
-backup_files.sort(key=os.path.getctime, reverse=True)
-for backup_file in backup_files[3:]:
-    os.remove(backup_file)
-
-
-logging.basicConfig(filename='/home/nikopelkonen/workspace/homescreen/data.log', level=logging.INFO)
-
-
-data_interval = timedelta(minutes=1)
-last_saved = {}
-
-def delete_old_logs():
-    # Delete data older than one year, except one data point every 15 minutes
-    now = datetime.now()
-    start_time = now - timedelta(days=365)
-    data_to_keep = {}
-    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'r') as f:
-        lines = f.readlines()
-    for line in lines:
-        parts = line.strip().split(' - ')
-        if len(parts) != 3:
-            continue
-        try:
-            log_time = datetime.strptime(parts[0], '%Y-%m-%d %H:%M:%S.%f')
-            mac = parts[1].split(' ')[-1]
-        except ValueError:
-            continue
-        if log_time >= start_time:
-            data_to_keep[mac] = log_time
-        elif log_time.minute % 15 == 0:
-            if mac not in data_to_keep or log_time > data_to_keep[mac]:
-                data_to_keep[mac] = log_time
-    with open('/home/nikopelkonen/workspace/homescreen/data.log', 'w') as f:
-        for line in lines:
-            parts = line.strip().split(' - ')
-            if len(parts) != 3:
-                f.write(line)
-                continue
-            try:
-                log_time = datetime.strptime(parts[0], '%Y-%m-%d %H:%M:%S.%f')
-                mac = parts[1].split(' ')[-1]
-            except ValueError:
-                f.write(line)
-                continue
-            if mac in data_to_keep and log_time == data_to_keep[mac]:
-                f.write(line)
+    # Save data to Redis with key as MAC address
+    redis_client.rpush(mac_address + ':data', data_json)
 
 def handle_data(found_data):
-    mac = found_data[0]
+    global last_save_time  # Import the global variable to update it
+
+    mac_address = found_data[0]
     data = found_data[1]
-    now = datetime.now()
+    # Save data point to dictionary
+    ruuvi_data[mac_address] = data
 
-    # Save data point every minute
-    if mac not in last_saved or now - last_saved[mac] >= data_interval:
-        logging.info(f"{now} - MAC {mac} - Data {data}")
-        last_saved[mac] = now
+    # Check if it's time to save data to Redis
+    if (datetime.now() - last_save_time) >= timedelta(seconds=SAVE_INTERVAL):
+        # Save data to Redis for each sensor
+        for mac_address, data in ruuvi_data.items():
+            save_data_to_redis(mac_address, data)
+        # Clear dictionary
+        ruuvi_data.clear()
+        # Update the last_save_time
+        last_save_time = datetime.now()
 
-    # Delete old log data and keep one data point every 15 minutes after one year
-    if now.date() != datetime(2024, 3, 21).date():
-        delete_old_logs()
+if __name__ == '__main__':
+    # Create dictionary to store RuuviTag data
+    ruuvi_data = {}
 
-if __name__ == "__main__":
+    # Start listening for RuuviTag data
     RuuviTagSensor.get_data(handle_data)

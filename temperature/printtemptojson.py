@@ -1,78 +1,63 @@
-import re
+import redis
 import json
-import time
-from datetime import datetime, timedelta, time as datetime_time
+from datetime import datetime
+from time import sleep
 
-# Provide the correct file path
-log_file_path = "/home/nikopelkonen/workspace/homescreen/data.log"
+# Redis configuration
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
 
-# Set the output file path
-output_file_path = "/var/www/html/temperature.json"
+# Create Redis client
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
-# Initialize variables
-last_processed_timestamp = dict()
-sensors_data = []
-last_reset_date = datetime.today().date()
+def get_data_points(mac_address):
+    data_points = redis_client.lrange(mac_address + ':data', 0, -1)
+    return [json.loads(data_point.decode()) for data_point in data_points]
 
-def check_and_reset_data():
-    global sensors_data
-    global last_reset_date
-    today = datetime.today().date()
-    if today != last_reset_date:
-        sensors_data = []
-        last_reset_date = today
+def generate_temperature_json(mac_address_to_id):
+    temperature_data = []
 
-while True:
-    check_and_reset_data()
-    today_midnight = datetime.combine(datetime.today(), datetime_time(0, 0))
-    tomorrow_midnight = today_midnight + timedelta(days=1)
+    for mac_address, location_id in mac_address_to_id.items():
+        data_points = get_data_points(mac_address)
 
-    # Open the log file and read the lines
-    with open(log_file_path, "r") as log_file:
-        for line in log_file.readlines():
-            sensor_id = None
-            mac_address = None
+        if not data_points:
+            continue
 
-            if line.startswith("INFO:root") and "MAC F3:DB:14:E5:BD:FB" in line:
-                sensor_id = "ulkotila"
-                mac_address = "MAC F3:DB:14:E5:BD:FB"
-            elif line.startswith("INFO:root") and "MAC E1:EE:8A:A0:01:C5" in line:
-                sensor_id = "sisatila"
-                mac_address = "MAC E1:EE:8A:A0:01:C5"
+        # Filter data points to only include those from the current day
+        current_day_data_points = [data_point for data_point in data_points if datetime.strptime(data_point['timestamp'], "%Y-%m-%d %H:%M:%S.%f").date() == datetime.today().date()]
 
-            if sensor_id and mac_address:
+        if not current_day_data_points:
+            continue
 
-                timestamp_str, data_str = re.search(rf"(\d{{4}}-\d{{2}}-\d{{2}} \d{{2}}:\d{{2}}:\d{{2}}\.\d{{6}}) - {mac_address} - Data (.+)$", line).groups()
-                timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+        latest_temperature = current_day_data_points[-1]['temperature']
+        highest_temperature = max(data_point['temperature'] for data_point in current_day_data_points)
+        lowest_temperature = min(data_point['temperature'] for data_point in current_day_data_points)
+        timestamp = current_day_data_points[-1]['timestamp']
 
-                if sensor_id not in last_processed_timestamp or timestamp > last_processed_timestamp[sensor_id]:
-                    if today_midnight <= timestamp < tomorrow_midnight:
-                        data = eval(data_str)
-                        temperature = data["temperature"]
+        temperature_data.append({
+            "id": location_id,
+            "timestamp": timestamp,
+            "latest_temperature": latest_temperature,
+            "highest_temperature": highest_temperature,
+            "lowest_temperature": lowest_temperature
+        })
 
-                        sensor_data = next((sd for sd in sensors_data if sd["id"] == sensor_id), None)
-                        if not sensor_data:
-                            sensor_data = {"id": sensor_id, "data": []}
-                            sensors_data.append(sensor_data)
+    return temperature_data
 
-                        sensor_data["data"].append({"timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"), "temperature": temperature})
+if __name__ == '__main__':
+    # Replace with your actual MAC addresses and location IDs
+    mac_address_to_id = {
+        'E1:EE:8A:A0:01:C5': 'sisatila',
+        'F3:DB:14:E5:BD:FB': 'ulkotila'
+    }
 
-                    last_processed_timestamp[sensor_id] = timestamp
+    output_file_path = "/var/www/html/temperature.json"
 
-    # Save the temperature data to a JSON file only if new data is available
-    if sensors_data:
-        sensors_json_data = []
-        for sensor_data in sensors_data:
-            data = sensor_data["data"]
-            latest_temperature = data[-1]["temperature"]
-            highest_temperature = max([d["temperature"] for d in data])
-            lowest_temperature = min([d["temperature"] for d in data])
-            latest_timestamp = data[-1]["timestamp"]
-            sensors_json_data.append({"id": sensor_data["id"], "timestamp": latest_timestamp, "latest_temperature": latest_temperature, "highest_temperature": highest_temperature, "lowest_temperature": lowest_temperature})
+    while True:
+        temperature_data = generate_temperature_json(mac_address_to_id)
 
-        # Write the JSON data to the output file with indentation
-        with open(output_file_path, "w") as output_file:
-            json.dump(sensors_json_data, output_file, indent=4)
+        with open(output_file_path, 'w') as file:
+            json.dump(temperature_data, file, indent=4)
 
-    # Sleep for a specified interval (e.g., 60 seconds) before repeating the process
-    time.sleep(15)
+        sleep(15)

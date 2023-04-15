@@ -7,25 +7,46 @@
     <title>Homescreen</title>
     <style>
         table {
-            border-collapse: collapse;
-            width: 50%;
+        border-collapse: collapse;
+        width: 50%;
         }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: left;
+
+        th,
+        td {
+        border: 1px solid white;
+        padding: 8px;
+        text-align: left;
         }
+
         th {
-            background-color: black;
-            color: white;
+        background-color: black;
+        color: white;
         }
+
         body {
-            background-color: black;
-            color: white;
+        background-color: black;
+        color: white;
         }
-        table, th, td {
-            border: 1px solid white;
+
+        table,
+        th,
+        td {
+        border: 1px solid white;
         }
+
+
+        @media only screen and (max-width: 768px) {
+        table {
+        width: 100%;
+        }
+        }
+
+        @media only screen and (max-width: 480px) {
+        th,
+        td {
+        padding: 6px;
+  }
+}
     </style>
     
 </head>
@@ -36,14 +57,25 @@
     <table>
         <thead>
             <tr>
-                <th>Sijainti</th>
-                <th>Kello</th>
-                <th>Viimeisin lämpötila</th>
-                <th>Korkein lämpötila</th>
-                <th>Matalin lämpötila</th>
+                <th rowspan="5">Sijainti:</th>
+                <th>Ulkolämpötila</th>
+                <th>Sisälämpötila</th>
             </tr>
         </thead>
         <tbody id="temperature-data">
+        </tbody>
+    </table>
+    
+    <h1>Bussit</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Bussi</th>
+                <th>ETA</th>
+                <th>Suunta</th>
+            </tr>
+        </thead>
+        <tbody id="bus-data">
         </tbody>
     </table>
 
@@ -57,19 +89,6 @@
             </tr>
         </thead>
         <tbody id="train-data">
-        </tbody>
-    </table>
-
-    <h1>Bussit</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Bussi</th>
-                <th>ETA</th>
-                <th>Suunta</th>
-            </tr>
-        </thead>
-        <tbody id="bus-data">
         </tbody>
     </table>
 
@@ -136,22 +155,52 @@
     });
 }
 
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}.${month}.${year} klo: ${hours}:${minutes}`;
+}
+
 function updateTable(data) {
     const tableBody = document.getElementById('temperature-data');
     tableBody.innerHTML = '';
 
-    data.forEach(item => {
-        const displayName = idToDisplayName(item.id);
-        const row = `<tr>
-            <td>${displayName}</td>
-            <td>${item.timestamp}</td>
-            <td>${item.latest_temperature}</td>
-            <td>${item.highest_temperature}</td>
-            <td>${item.lowest_temperature}</td>
-        </tr>`;
-        tableBody.innerHTML += row;
-    });
+    const ulkoData = data.find(item => item.id === 'ulkotila') || {};
+    const sisaData = data.find(item => item.id === 'sisatila') || {};
+
+    const rows = [
+        `<tr>
+            <td>Aika:</td>
+            <td>${ulkoData.timestamp ? formatTimestamp(ulkoData.timestamp) : ''}</td>
+            <td>${sisaData.timestamp ? formatTimestamp(sisaData.timestamp) : ''}</td>
+        </tr>`,
+        `<tr>
+            <td>Viimeisin lämpötila:</td>
+            <td>${ulkoData.latest_temperature || ''}</td>
+            <td>${sisaData.latest_temperature || ''}</td>
+        </tr>`,
+        `<tr>
+            <td>Korkein lämpötila:</td>
+            <td>${ulkoData.highest_temperature || ''}</td>
+            <td>${sisaData.highest_temperature || ''}</td>
+        </tr>`,
+        `<tr>
+            <td>Matalin lämpötila:</td>
+            <td>${ulkoData.lowest_temperature || ''}</td>
+            <td>${sisaData.lowest_temperature || ''}</td>
+        </tr>`
+    ];
+
+    tableBody.innerHTML += rows.join('');
 }
+
+
+
 
 fetchData(); // Fetch data when the page loads
 setInterval(fetchData, 60000); // Refresh data every minute (60000 milliseconds)
